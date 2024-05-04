@@ -137,7 +137,7 @@ std::string MqttRoom::format_device_name(const std::string &device_name) {
   bool prev_is_space = false;
 
   // Remove all double spaces from the string
-  str.erase(std::unique(str.begin(), str.end(), [](char lhs, char rhs) { return lhs == rhs == ' '; }), str.end());
+  str.erase(std::unique(str.begin(), str.end(), [](char lhs, char rhs) { return (lhs == ' ') && (rhs == ' '); }), str.end());
   std::transform(str.begin(), str.end(), str.begin(), [](char c) {
     if (c == ' ')
       return '-';
