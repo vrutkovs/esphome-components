@@ -39,7 +39,7 @@ void MqttRoomTracker::update_rssi_sensor(int rssi, int signal_power) {
 }
 
 void MqttRoomTracker::update_distance_sensor(int rssi) {
-  float ratio = (this->signal_power_ - rssi) / (65.0f);
+  float ratio = (this->signal_power_ - rssi) / (50.0f);
   float distance = pow(10, ratio);
 
   if (this->distance_sensor_ == nullptr) {
@@ -55,7 +55,7 @@ void MqttRoom::dump_config() {
 }
 
 void MqttRoom::send_tracker_update(std::string &id, std::string &name, float distance) {
-  // ESP_LOGD(TAG, "'%s': Sending state %f m with 2 decimals of accuracy", id.c_str(), distance);
+  ESP_LOGD(TAG, "'%s': Sending state %f m with 2 decimals of accuracy", id.c_str(), distance);
   distance = std::round(distance * 100) / 100;
 
   mqtt::global_mqtt_client->publish_json(this->mqtt_topic_, [=](ArduinoJson::JsonObject root) -> void {
