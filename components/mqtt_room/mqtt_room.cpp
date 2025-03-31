@@ -67,66 +67,73 @@ void MqttRoom::send_tracker_update(std::string &id, std::string &name, float dis
 
 bool MqttRoom::parse_device(const esp32_ble_tracker::ESPBTDevice &device) {
   std::string id;
-  int signal_power = (!device.get_tx_powers().empty()) ? -65 + device.get_tx_powers().at(0) : 0;
 
   if (!device.get_name().empty()) {
     id = std::string("name:") + MqttRoom::format_device_name(device.get_name());
   }
 
-  for (auto &it : device.get_service_uuids()) {
-    if (this->tile_uuid_ == it) {
-      id = std::string("tile:") + MqttRoom::format_device_address(device.address());
-    }
-  }
+  // for (auto &it : device.get_service_uuids()) {
+  //   if (this->tile_uuid_ == it) {
+  //     id = std::string("tile:") + MqttRoom::format_device_address(device.address());
+  //   }
+  // }
 
-  for (auto &it : device.get_service_datas()) {
-    if (it.uuid == this->exposure_uuid_) {
-      char str[12];
-      sprintf(str, "exp:%u", it.data.size());
-      id = std::string(str);
-    }
-  }
+  // for (auto &it : device.get_service_datas()) {
+  //   if (it.uuid == this->exposure_uuid_) {
+  //     char str[12];
+  //     sprintf(str, "exp:%u", it.data.size());
+  //     id = std::string(str);
+  //   }
+  // }
 
-  for (auto &it : device.get_manufacturer_datas()) {
-    if (it.uuid == this->apple_uuid_) {
-      if (it.data.size() == 27 && it.data[0] == 0x12) {
-        id = "apple:findmy";
-      } else {
-        char str[16];
-        sprintf(str, "apple:%02x%02x:%u", it.data[0], it.data[1], it.data.size());
-      }
-    } else if (it.uuid == this->sonos_uuid_) {
-      id = std::string("sonos:") + MqttRoom::format_device_name(device.get_name());
-    } else if (it.uuid == this->samsung_uuid_) {
-      id = std::string("samsung:") + MqttRoom::format_device_address(device.address());
-    } else if (it.uuid == this->google_uuid_) {
-      id = std::string("google:") + MqttRoom::format_device_address(device.address());
-    } else if (it.uuid == this->sony_uuid_) {
-      id = std::string("sony:") + MqttRoom::format_device_address(device.address());
-    } else {
-      ESP_LOGD(TAG, "Found device with a unknown manufacture id: '%s' and mac: '%s'", it.uuid.to_string().c_str(),
-               device.address_str().c_str());
-    }
+  // for (auto &it : device.get_manufacturer_datas()) {
+  //   if (it.uuid == this->apple_uuid_) {
+  //     if (it.data.size() == 27 && it.data[0] == 0x12) {
+  //       id = "apple:findmy";
+  //     } else {
+  //       char str[16];
+  //       sprintf(str, "apple:%02x%02x:%u", it.data[0], it.data[1], it.data.size());
+  //     }
+  //   } else if (it.uuid == this->sonos_uuid_) {
+  //     id = std::string("sonos:") + MqttRoom::format_device_name(device.get_name());
+  //   } else if (it.uuid == this->samsung_uuid_) {
+  //     id = std::string("samsung:") + MqttRoom::format_device_address(device.address());
+  //   } else if (it.uuid == this->google_uuid_) {
+  //     id = std::string("google:") + MqttRoom::format_device_address(device.address());
+  //   } else if (it.uuid == this->sony_uuid_) {
+  //     id = std::string("sony:") + MqttRoom::format_device_address(device.address());
+  //   }
 
-    if (it.data.size() == 23 && it.data[0] == 0x02 && it.data[1] == 0x15) {
-      auto ibeacon = device.get_ibeacon().value();
-      char str[128];
-      sprintf(str, "ibeacon:%s-%u-%u", ibeacon.get_uuid().to_string().c_str(), ibeacon.get_major(),
-              ibeacon.get_minor());
-      id = std::string(str);
-      signal_power = ibeacon.get_signal_power();
-    }
-  }
+  //   if (it.data.size() == 23 && it.data[0] == 0x02 && it.data[1] == 0x15) {
+  //     auto ibeacon = device.get_ibeacon().value();
+  //     char str[128];
+  //     sprintf(str, "ibeacon:%s-%u-%u", ibeacon.get_uuid().to_string().c_str(), ibeacon.get_major(),
+  //             ibeacon.get_minor());
+  //     id = std::string(str);
+  //     signal_power = ibeacon.get_signal_power();
+  //   }
+  // }
 
   if (!id.empty()) {
     for (MqttRoomTracker *tracker : this->trackers_) {
       if (tracker->get_device_id() == id) {
-        tracker->update_rssi_sensor(device.get_rssi(), signal_power);
+        int signal_power = (!device.get_tx_powers().empty()) ? -65 + device.get_tx_powers().at(0) : 0;
         ESP_LOGD(TAG, "Found '%s', signal_power: '%d', rssi: '%d'", tracker->get_name().c_str(), signal_power, device.get_rssi());
+        tracker->update_rssi_sensor(device.get_rssi(), signal_power);
         return true;
       }
     }
-    ESP_LOGD(TAG, "BLE Device found with id: '%s', signal_power: '%d', rssi: '%d'", id.c_str(), signal_power, device.get_rssi());
+    // ESP_LOGD(TAG, "BLE Device found with id: '%s', signal_power: '%d', rssi: '%d'", id.c_str(), signal_power, device.get_rssi());
+  } else {
+      if (it.data.size() == 23 && it.data[0] == 0x02 && it.data[1] == 0x15) {
+        auto ibeacon = device.get_ibeacon().value();
+        char str[128];
+        sprintf(str, "ibeacon:%s-%u-%u", ibeacon.get_uuid().to_string().c_str(), ibeacon.get_major(),
+                ibeacon.get_minor());
+        id = std::string(str);
+        ESP_LOGD(TAG, "Scan: found empty ID: %s", id.c_str());
+      }
+    }
   }
 
   return false;
