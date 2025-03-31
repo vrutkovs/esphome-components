@@ -103,9 +103,6 @@ bool MqttRoom::parse_device(const esp32_ble_tracker::ESPBTDevice &device) {
       id = std::string("google:") + MqttRoom::format_device_address(device.address());
     } else if (it.uuid == this->sony_uuid_) {
       id = std::string("sony:") + MqttRoom::format_device_address(device.address());
-    } else {
-      ESP_LOGD(TAG, "Found device with a unknown manufacture id: '%s' and mac: '%s'", it.uuid.to_string().c_str(),
-               device.address_str().c_str());
     }
 
     if (it.data.size() == 23 && it.data[0] == 0x02 && it.data[1] == 0x15) {
@@ -122,11 +119,11 @@ bool MqttRoom::parse_device(const esp32_ble_tracker::ESPBTDevice &device) {
     for (MqttRoomTracker *tracker : this->trackers_) {
       if (tracker->get_device_id() == id) {
         tracker->update_rssi_sensor(device.get_rssi(), signal_power);
-        ESP_LOGD(TAG, "Found '%s', signal_power: '%d', rssi: '%d'", tracker->get_name().c_str(), signal_power, device.get_rssi());
+        // ESP_LOGD(TAG, "Found '%s', signal_power: '%d', rssi: '%d'", tracker->get_name().c_str(), signal_power, device.get_rssi());
         return true;
       }
     }
-    ESP_LOGD(TAG, "BLE Device found with id: '%s', signal_power: '%d', rssi: '%d'", id.c_str(), signal_power, device.get_rssi());
+    // ESP_LOGD(TAG, "BLE Device found with id: '%s', signal_power: '%d', rssi: '%d'", id.c_str(), signal_power, device.get_rssi());
   }
 
   return false;
